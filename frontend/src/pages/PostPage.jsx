@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 
 export default function PostPage() {
-  const { userInfo } = useContext(UserContext);
+  const { user } = useContext(UserContext);
   const [post, setPost] = useState(null);
   const { id } = useParams();
 
@@ -28,8 +28,8 @@ export default function PostPage() {
     <div className="postpage">
       <h1>{post.title}</h1>
       <time>{formatISO9075(new Date(post.createdAt))}</time>
-      <div>by @{post.authoe?.username || "Unknow"}</div>
-      {userInfo?.id === post.author?._id && (
+      <div>by @{post.author?.username || "Unknown"}</div>
+      {user?.id === post.author?._id && (
         <div>
           <Link to={`/edit/${post._id}`}>
             <svg
@@ -52,9 +52,7 @@ export default function PostPage() {
       )}
       <div>
         <img
-          src={
-            post.coverUrl || `http://localhost:4000/uploads/${postInfo.cover}`
-          }
+          src={post.coverUrl || `http://localhost:4000/uploads/${post.cover}`}
           alt={post.title}
         />
       </div>

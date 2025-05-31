@@ -2,9 +2,9 @@ import { useState } from "react";
 import axios from "axios";
 
 export default function RegisterPage() {
+  const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
 
   async function register(e) {
     e.preventDefault();
@@ -16,6 +16,7 @@ export default function RegisterPage() {
       });
 
       // 可以在这里处理 response，例如跳转或提示成功
+      // 只是打印日志，应该添加重定向到登录页面
       console.log("Register success:", response.data);
     } catch (error) {
       console.error("Register failed:", error);

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import Editor from "../components/Editor";
 import axios from "axios";
+import { useContext } from "react";
+import { UserContext } from "../components/UserContext";
 
 export default function EditPostPage() {
   const [title, setTitle] = useState("");
@@ -9,6 +11,10 @@ export default function EditPostPage() {
   const [redirect, setRedirect] = useState(false);
   const [summary, setSummary] = useState("");
   const [file, setFile] = useState("");
+  const { id } = useParams();
+  const { user } = useContext(UserContext);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     axios
@@ -26,6 +32,7 @@ export default function EditPostPage() {
 
   async function updatePost(e) {
     e.preventDefault();
+    setLoading(true);
     const data = new FormData();
     data.set("title", title);
     data.set("summary", summary);
@@ -45,7 +52,9 @@ export default function EditPostPage() {
       setRedirect(true);
     } catch (error) {
       console.error("Failed to update post:", error);
-      alert("Update failed");
+      setErrorMsg("Update failed");
+    } finally {
+      setLoading(false);
     }
   }
   if (redirect) {
@@ -53,22 +62,33 @@ export default function EditPostPage() {
   }
 
   return (
-    <form onSubmit={updatePost}>
+    <form className="edit-post-form" onSubmit={updatePost}>
       <input
-        type="title"
+        className="edit-title-input"
+        type="text"
         placeholder="Title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
+        required
       />
       <input
-        type="summary"
+        className="edit-summary-input"
+        type="text"
         placeholder="Summary"
         value={summary}
         onChange={(e) => setSummary(e.target.value)}
+        required
       />
-      <input type="file" onChange={(e) => setFile(e.target.files)} />
+      <input
+        className="edit-file-input"
+        type="file"
+        onChange={(e) => setFile(e.target.files)}
+      />
       <Editor value={content} onChange={setContent} />
-      <button>Update Post</button>
+      <button className="edit-submit-btn" disabled={loading}>
+        {loading ? "Updating..." : "Update Post"}
+      </button>
+      {errorMsg && <div className="error edit-error-msg">{errorMsg}</div>}
     </form>
   );
 }

@@ -1,8 +1,11 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 2.5rem 2rem;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 32px 0 rgba(60, 60, 60, 0.08);
+  min-height: 80vh;
 }
 
 .logo {
@@ -39,4 +42,166 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* 导航栏样式 */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #ececec;
+  margin-bottom: 2rem;
+}
+header .logo {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #646cff;
+  letter-spacing: 2px;
+  text-decoration: none;
+}
+header nav {
+  display: flex;
+  gap: 1.5rem;
+}
+header nav a,
+header nav button {
+  color: #333;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+header nav a:hover,
+header nav button:hover {
+  color: #646cff;
+}
+
+/* 表单样式 */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  background: #fafbfc;
+  padding: 2rem 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px 0 rgba(60, 60, 60, 0.04);
+  margin: 0 auto;
+  max-width: 480px;
+}
+form input[type="text"],
+form input[type="password"],
+form input[type="email"],
+form input[type="file"],
+form textarea {
+  padding: 0.7em 1em;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #fff;
+  transition: border-color 0.2s;
+}
+form input:focus,
+form textarea:focus {
+  border-color: #646cff;
+  outline: none;
+}
+form button {
+  background: linear-gradient(90deg, #646cff 0%, #535bf2 100%);
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  padding: 0.8em 0;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 8px 0 rgba(60, 60, 60, 0.06);
+  transition: background 0.2s;
+}
+form button:disabled {
+  background: #bfc2f7;
+  cursor: not-allowed;
+}
+
+/* 错误提示样式 */
+.error {
+  color: #e74c3c;
+  background: #fff0f0;
+  border: 1px solid #ffd6d6;
+  padding: 0.7em 1em;
+  border-radius: 6px;
+  font-size: 0.98rem;
+  margin-top: -0.5rem;
+}
+
+/* 卡片和文章列表样式 */
+.post,
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px 0 rgba(60, 60, 60, 0.04);
+  margin-bottom: 2rem;
+  padding: 1.5rem 2rem;
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+.post .image img {
+  width: 160px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 1px 6px 0 rgba(60, 60, 60, 0.08);
+}
+.post .texts {
+  flex: 1;
+}
+.post h2 {
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem 0;
+  color: #535bf2;
+}
+.post p {
+  margin: 0.2rem 0;
+  color: #444;
+}
+.post time {
+  color: #888;
+  font-size: 0.95rem;
+  margin-left: 0.5rem;
+}
+
+/* 富文本编辑器美化 */
+.ql-toolbar.ql-snow {
+  border-radius: 6px 6px 0 0;
+  border-color: #e0e0e0;
+  background: #f5f6fa;
+}
+.ql-container.ql-snow {
+  border-radius: 0 0 6px 6px;
+  border-color: #e0e0e0;
+  min-height: 180px;
+  background: #fff;
+}
+
+/* 响应式优化 */
+@media (max-width: 600px) {
+  #root {
+    padding: 0.5rem;
+    min-width: unset;
+  }
+  form {
+    padding: 1rem;
+    max-width: 100%;
+  }
+  .post,
+  .card {
+    flex-direction: column;
+    padding: 1rem;
+  }
+  .post .image img {
+    width: 100%;
+    height: 180px;
+  }
 }
