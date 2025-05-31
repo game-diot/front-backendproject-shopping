@@ -35,22 +35,24 @@ export default function LoginPage() {
   }
   return (
     <form className="login-form" onSubmit={login}>
-      <h2 className="login-title"></h2>
+      <h2 className="login-title">欢迎登录</h2>
       <input
         className="login-username-input"
         type="text"
-        placeholder="username or email"
+        placeholder="用户名或邮箱"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
+        required
       />
       <input
         className="login-password-input"
         type="password"
-        placeholder="password"
+        placeholder="密码"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        required
       />
-      <button className="login-btn">Login</button>
+      <button className="login-btn">登录</button>
     </form>
   );
 }
