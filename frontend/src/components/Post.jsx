@@ -13,7 +13,7 @@ export default function Post({
   return (
     <div className="post">
       <div className="image">
-        <Link to={`/posts/${_id}`}>
+        <Link to={`/post/${_id}`}>
           <img
             src={coverUrl || `http://localhost:4000/uploads/${cover}`}
             alt={title}
@@ -25,8 +25,10 @@ export default function Post({
           <h2>{title}</h2>
         </Link>
         <p>
-          <span>{author?.username || "unknown"}</span>
-          <time datetime="">{formatISO9075(new Date(createdAt))}</time>
+          <span>{author?.username || "未知用户"}</span>
+          <time dateTime={formatISO9075(new Date(createdAt))}>
+            {formatISO9075(new Date(createdAt))}
+          </time>
         </p>
         <p>{summary}</p>
       </div>

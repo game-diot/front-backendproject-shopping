@@ -1,94 +1,214 @@
-import { useEffect, useState } from "react";
-import { Navigate, useParams } from "react-router-dom";
-import Editor from "../components/Editor";
+import { useEffect, useState, useContext } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useContext } from "react";
 import { UserContext } from "../components/UserContext";
+import MdEditor from "react-markdown-editor-lite";
+import "react-markdown-editor-lite/lib/index.css";
+import MarkdownIt from "markdown-it";
+import TurndownService from "turndown";
 
-export default function EditPostPage() {
+const mdParser = new MarkdownIt();
+const turndownService = new TurndownService();
+
+export default function EditPost() {
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [redirect, setRedirect] = useState(false);
   const [summary, setSummary] = useState("");
-  const [file, setFile] = useState("");
-  const { id } = useParams();
-  const { user } = useContext(UserContext);
+  const [content, setContent] = useState("");
+  const [files, setFiles] = useState("");
+  const [currentCover, setCurrentCover] = useState("");
+  const [titleError, setTitleError] = useState("");
+  const [summaryError, setSummaryError] = useState("");
+  const [contentError, setContentError] = useState("");
+  const [fileError, setFileError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useContext(UserContext);
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:4000/post/${id}`)
-      .then((response) => {
-        const postInfo = response.data;
-        setTitle(postInfo.title);
-        setContent(postInfo.content);
-        setSummary(postInfo.summary);
-      })
-      .catch((error) => {
-        console.error("Failed to fetch post:", error);
-      });
-  }, []);
+    const fetchPost = async () => {
+      try {
+        const response = await axios.get(`http://localhost:4000/post/${id}`);
+        const postData = response.data;
+        setTitle(postData.title);
+        setSummary(postData.summary);
+        // 将 HTML 内容转换为 Markdown
+        const markdownContent = turndownService.turndown(postData.content);
+        setContent(markdownContent);
+        if (postData.cover) {
+          setCurrentCover(`http://localhost:4000/uploads/${postData.cover}`);
+        }
+      } catch (error) {
+        console.error("获取文章失败:", error);
+        setContentError("获取文章失败，请稍后重试");
+      }
+    };
+    fetchPost();
+  }, [id]);
 
   async function updatePost(e) {
     e.preventDefault();
+    setTitleError("");
+    setSummaryError("");
+    setContentError("");
+    setFileError("");
     setLoading(true);
+
+    // 表单验证
+    let hasError = false;
+    if (!title.trim()) {
+      setTitleError("请输入文章标题");
+      hasError = true;
+    }
+    if (!summary.trim()) {
+      setSummaryError("请输入文章摘要");
+      hasError = true;
+    }
+    if (!content || !content.trim()) {
+      setContentError("请输入文章内容");
+      hasError = true;
+    }
+
+    if (hasError) {
+      setLoading(false);
+      return;
+    }
+
     const data = new FormData();
-    data.set("title", title);
-    data.set("summary", summary);
-    data.set("content", content);
-    data.set("id", id);
-    if (file?.[0]) {
-      data.set("file", file[0]);
+    data.set("title", title.trim());
+    data.set("summary", summary.trim());
+    // 在发送数据前将 Markdown 转换回 HTML
+    const htmlContent = mdParser.render(content);
+    data.set("content", htmlContent);
+    data.set("postId", id);
+    if (files[0]) {
+      data.set("file", files[0]);
     }
 
     try {
-      await axios.put("http://localhost:4000/post", data, {
+      console.log("正在更新文章，ID:", id);
+      console.log("更新数据:", {
+        title: title.trim(),
+        summary: summary.trim(),
+        // content: content.trim(), // 不打印完整内容
+        hasFile: !!files[0],
+      });
+
+      const response = await axios.put("http://localhost:4000/post", data, {
         withCredentials: true,
         headers: {
-          "Content-Type": "multipart/form-data", // axios 会自动设置正确的 boundary
+          "Content-Type": "multipart/form-data",
         },
       });
-      setRedirect(true);
+
+      if (response.data) {
+        navigate(`/post/${id}`);
+      } else {
+        setContentError("更新文章失败，请稍后重试");
+      }
     } catch (error) {
-      console.error("Failed to update post:", error);
-      setErrorMsg("Update failed");
+      console.error("更新文章失败:", error);
+      if (error.response) {
+        setContentError(
+          error.response.data.error || "更新文章失败，请稍后重试"
+        );
+      } else if (error.request) {
+        setContentError("网络连接失败，请检查网络设置");
+      } else {
+        setContentError("更新文章失败，请稍后重试");
+      }
     } finally {
       setLoading(false);
     }
   }
-  if (redirect) {
-    return <Navigate to={"/post/" + id} />;
+
+  if (!user) {
+    return <Navigate to="/login" />;
   }
 
   return (
-    <form className="edit-post-form" onSubmit={updatePost}>
-      <input
-        className="edit-title-input"
-        type="text"
-        placeholder="Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        required
-      />
-      <input
-        className="edit-summary-input"
-        type="text"
-        placeholder="Summary"
-        value={summary}
-        onChange={(e) => setSummary(e.target.value)}
-        required
-      />
-      <input
-        className="edit-file-input"
-        type="file"
-        onChange={(e) => setFile(e.target.files)}
-      />
-      <Editor value={content} onChange={setContent} />
-      <button className="edit-submit-btn" disabled={loading}>
-        {loading ? "Updating..." : "Update Post"}
-      </button>
-      {errorMsg && <div className="error edit-error-msg">{errorMsg}</div>}
-    </form>
+    <div className="form-container">
+      <form className="form" onSubmit={updatePost}>
+        <h2>编辑文章</h2>
+        <div className="form-group">
+          <label htmlFor="title">文章标题</label>
+          <input
+            id="title"
+            type="text"
+            placeholder="请输入文章标题"
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (e.target.value.trim()) {
+                setTitleError("");
+              }
+            }}
+            className={titleError ? "error" : ""}
+            required
+          />
+          {titleError && <div className="error-message">{titleError}</div>}
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="summary">文章摘要</label>
+          <input
+            id="summary"
+            type="text"
+            placeholder="请输入文章摘要"
+            value={summary}
+            onChange={(e) => {
+              setSummary(e.target.value);
+              if (e.target.value.trim()) {
+                setSummaryError("");
+              }
+            }}
+            className={summaryError ? "error" : ""}
+            required
+          />
+          {summaryError && <div className="error-message">{summaryError}</div>}
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="cover">封面图片</label>
+          {currentCover && (
+            <div className="current-cover">
+              <img src={currentCover} alt="当前封面" />
+              <span>当前封面</span>
+            </div>
+          )}
+          <input
+            id="cover"
+            type="file"
+            onChange={(e) => {
+              setFiles(e.target.files);
+              if (e.target.files[0]) {
+                setFileError("");
+              }
+            }}
+            accept="image/*"
+            className={fileError ? "error" : ""}
+          />
+          {fileError && <div className="error-message">{fileError}</div>}
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="content">文章内容</label>
+          <div className={`editor-container ${contentError ? "error" : ""}`}>
+            <MdEditor
+              value={content}
+              style={{ height: 300 }}
+              renderHTML={(text) => mdParser.render(text)}
+              onChange={({ text }) => setContent(text)}
+              placeholder="请输入文章内容，支持 Markdown 语法"
+            />
+          </div>
+          {contentError && <div className="error-message">{contentError}</div>}
+        </div>
+
+        <button type="submit" disabled={loading}>
+          {loading ? "更新中..." : "更新文章"}
+        </button>
+      </form>
+    </div>
   );
 }

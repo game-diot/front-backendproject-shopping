@@ -1,62 +1,97 @@
-import { useContext, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { formatISO9075 } from "date-fns";
-import { UserContext } from "../components/UserContext";
-import { Link } from "react-router-dom";
+import { useEffect, useState, useContext } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import { UserContext } from "../components/UserContext";
+import { format } from "date-fns";
+import { zhCN } from "date-fns/locale";
 
 export default function PostPage() {
-  const { user } = useContext(UserContext);
   const [post, setPost] = useState(null);
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useContext(UserContext);
 
   useEffect(() => {
-    axios
-      .get(`http://localhost:4000/post/${id}`)
-      .then((response) => {
+    const fetchPost = async () => {
+      try {
+        const response = await axios.get(`http://localhost:4000/post/${id}`);
         setPost(response.data);
-      })
-      .catch((error) => {
-        console.error("Failed to fetch post:", error);
-      });
+      } catch (error) {
+        console.error("获取文章失败:", error);
+      }
+    };
+    fetchPost();
   }, [id]);
 
-  if (!post) {
-    return <div>Loading...</div>;
-  }
+  const deletePost = async () => {
+    if (window.confirm("确定要删除这篇文章吗？")) {
+      try {
+        await axios.delete(`http://localhost:4000/post/${id}`, {
+          withCredentials: true,
+        });
+        navigate("/");
+      } catch (error) {
+        console.error("删除文章失败:", error);
+        alert("删除文章失败，请稍后重试");
+      }
+    }
+  };
+
+  if (!post) return null;
+
+  // 构建图片 URL
+  const getImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith("http")) return path;
+    return `http://localhost:4000/uploads/${path}`;
+  };
+
   return (
-    <div className="postpage">
-      <h1>{post.title}</h1>
-      <time>{formatISO9075(new Date(post.createdAt))}</time>
-      <div>by @{post.author?.username || "Unknown"}</div>
-      {user?.id === post.author?._id && (
-        <div>
-          <Link to={`/edit/${post._id}`}>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-6 h-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-              />
-            </svg>
-            Edit this post
-          </Link>
+    <div className="post-page">
+      <div className="post-header">
+        <h1 className="post-title">{post.title}</h1>
+        <div className="post-info">
+          <div className="post-author">
+            <img
+              src={
+                getImageUrl(post.author.avatar) ||
+                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23646cff'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E"
+              }
+              alt={post.author.username}
+            />
+            <span>{post.author.username}</span>
+          </div>
+          <div className="post-date">
+            {format(new Date(post.createdAt), "yyyy年MM月dd日 HH:mm", {
+              locale: zhCN,
+            })}
+          </div>
         </div>
-      )}
-      <div>
+      </div>
+
+      {post.cover && (
         <img
-          src={post.coverUrl || `http://localhost:4000/uploads/${post.cover}`}
+          className="post-cover"
+          src={getImageUrl(post.cover)}
           alt={post.title}
         />
-      </div>
-      <div dangerouslySetInnerHTML={{ __html: post.content }}></div>
+      )}
+
+      <div
+        className="post-content"
+        dangerouslySetInnerHTML={{ __html: post.content }}
+      />
+
+      {user && user.id === post.author._id && (
+        <div className="post-actions">
+          <Link to={`/edit/${post._id}`} className="edit-button">
+            编辑文章
+          </Link>
+          <button onClick={deletePost} className="delete-button">
+            删除文章
+          </button>
+        </div>
+      )}
     </div>
   );
 }

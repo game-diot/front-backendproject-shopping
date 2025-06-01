@@ -11,8 +11,13 @@ export default function IndexPage() {
         setPosts(response.data);
       })
       .catch((error) => {
-        console.error("Failed to fetch posts:", error);
+        console.error("获取文章列表失败:", error);
       });
   }, []);
-  return <>{posts.length > 0 && posts.map((post) => <Post {...post} />)}</>;
+  return (
+    <>
+      {posts.length > 0 &&
+        posts.map((post) => <Post key={post._id} {...post} />)}
+    </>
+  );
 }

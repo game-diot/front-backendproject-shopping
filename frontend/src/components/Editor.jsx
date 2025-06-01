@@ -1,27 +1,25 @@
-import ReactQuill from "react-quill";
+import MDEditor from "@uiw/react-md-editor";
+import { useState, useEffect } from "react";
 
-export default function Editor({ value, onChange }) {
-  const modules = {
-    toolbar: [
-      [{ header: [1, 2, false] }],
-      ["bold", "italic", "underline", "strike", "blockquote"],
-      [
-        { list: "ordered" },
-        { list: "bullet" },
-        { indent: "-1" },
-        { indent: "+1" },
-      ],
-      ["link", "image"],
-      ["clean"],
-    ],
-  };
+export default function EditorComponent({ value, onChange }) {
+  const [markdown, setMarkdown] = useState(value || "");
+
+  useEffect(() => {
+    onChange(markdown);
+  }, [markdown, onChange]);
+
   return (
-    <div className="editor-wrapper">
-      <ReactQuill
-        value={value}
-        theme={"snow"}
-        onChange={onChange}
-        modules={modules}
+    <div className="editor-wrapper" data-color-mode="light">
+      <MDEditor
+        value={markdown}
+        onChange={setMarkdown}
+        height={400}
+        preview="edit"
+        hideToolbar={false}
+        enableScroll={true}
+        textareaProps={{
+          placeholder: "请输入文章内容...",
+        }}
       />
     </div>
   );
