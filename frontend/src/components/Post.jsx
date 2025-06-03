@@ -1,3 +1,4 @@
+// frontend/src/components/Post.jsx
 import { formatISO9075 } from "date-fns";
 import { Link } from "react-router-dom";
 
@@ -5,17 +6,19 @@ export default function Post({
   _id,
   title,
   summary,
-  cover,
-  coverUrl,
+  imageUrl, // 接收后端返回的完整图片URL
   createdAt,
   author,
 }) {
+  // ✅ 移除 backendBaseUrl 的定义，因为不再需要它来拼接图片URL
+  // const backendBaseUrl = "http://localhost:4000";
+
   return (
     <div className="post">
       <div className="image">
         <Link to={`/post/${_id}`}>
           <img
-            src={coverUrl || `http://localhost:4000/uploads/${cover}`}
+            src={imageUrl} // ✅ 直接使用 imageUrl，因为它已经包含了完整的路径
             alt={title}
           />
         </Link>

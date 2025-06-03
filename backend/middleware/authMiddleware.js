@@ -1,19 +1,18 @@
-// middleware/authMiddleware.js
+// backend/middleware/authMiddleware.js
 const { verifyToken } = require("../utils/jwt"); // 导入我们在 utils/jwt.js 中定义的 verifyToken 函数
 
 /**
  * JWT 认证中间件
- * 验证请求头 Authorization 中的 token，并将解码后的用户信息附加到 req.user
+ * 验证请求 Cookie 中的 token，并将解码后的用户信息附加到 req.user
  *
  * @param {object} req - Express 请求对象
  * @param {object} res - Express 响应对象
  * @param {function} next - Express next() 回调函数
  */
 const authenticateToken = async (req, res, next) => {
-  // 从请求头 Authorization 中获取 token
-  // 格式通常为: Authorization: Bearer <token>
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1]; // 提取 Bearer 后面的 token 字符串
+  // ✅ 关键修改：从请求的 Cookie 中获取 token
+  // req.cookies 对象由 cookie-parser 中间件填充
+  const { token } = req.cookies;
 
   // 1. 检查是否存在 token
   if (!token) {

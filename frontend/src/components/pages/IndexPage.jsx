@@ -1,4 +1,4 @@
-import Post from "../components/Post";
+import Post from "../Post";
 import { useEffect, useState } from "react";
 import axios from "axios";
 

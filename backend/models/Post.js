@@ -9,13 +9,13 @@ const PostSchema = new Schema(
       type: String,
       required: [true, "Title is required"], // 标题是必填项
       trim: true, // 自动去除标题前后的空白字符
-      minlength: [5, "Title must be at least 5 characters long"], // 标题最小长度为5
+      minlength: [1, "Title must be at least 1 characters long"], // 标题最小长度为5
     },
     summary: {
       type: String,
       required: [true, "Summary is required"], // 摘要是必填项
       trim: true, // 自动去除摘要前后的空白字符
-      minlength: [10, "Summary must be at least 10 characters long"], // 摘要最小长度为10
+      minlength: [1, "Summary must be at least 1 characters long"], // 摘要最小长度为10
     },
     content: {
       type: String,

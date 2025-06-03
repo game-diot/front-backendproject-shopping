@@ -1,0 +1,78 @@
+/* frontend/src/components/ConfirmModal.css */
+
+.modal-overlay {
+  position: fixed; /* 固定定位，覆盖整个屏幕 */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* 半透明黑色背景 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* 确保模态框在最上层 */
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 25px 35px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  width: 90%; /* 适应小屏幕 */
+  max-width: 400px; /* 最大宽度 */
+  animation: fadeIn 0.3s ease-out; /* 添加一个淡入动画 */
+}
+
+.modal-message {
+  font-size: 1.1rem;
+  margin-bottom: 25px;
+  color: #333;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px; /* 按钮之间的间距 */
+}
+
+.modal-button {
+  padding: 10px 25px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.modal-button.confirm {
+  background-color: #dc3545; /* 红色，表示删除 */
+  color: white;
+}
+
+.modal-button.confirm:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+}
+
+.modal-button.cancel {
+  background-color: #6c757d; /* 灰色 */
+  color: white;
+}
+
+.modal-button.cancel:hover {
+  background-color: #5a6268;
+  transform: translateY(-1px);
+}
+
+/* 简单的淡入动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

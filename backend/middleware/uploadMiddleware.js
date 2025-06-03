@@ -45,7 +45,7 @@ const uploadMiddleware = multer({
   },
   // 可选：限制文件大小，例如 5MB
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5 MB (in bytes)
+    fileSize: 50 * 1024 * 1024, // 50 MB (in bytes)
   },
 });
 

@@ -25,7 +25,7 @@ router.post(
 // PUT /post: 更新文章 (需要认证和文件上传)
 // 同样，先处理文件上传，再进行认证
 router.put(
-  "/post",
+  "/post/:id",
   uploadMiddleware.single("file"),
   authenticateToken,
   postController.updatePost
@@ -36,5 +36,7 @@ router.get("/post", postController.getAllPosts);
 
 // GET /post/:id: 获取单篇文章详情 (不需要认证)
 router.get("/post/:id", postController.getPostById);
+// DELETE /post/:id: 删除文章 (需要认证)
+router.delete("/post/:id", authenticateToken, postController.deletePost);
 
 module.exports = router; // 导出路由器

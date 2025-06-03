@@ -1,33 +1,52 @@
-import { useState, useContext } from "react";
-import { useNavigate } from "react-router-dom";
-import { UserContext } from "../components/UserContext";
+import { useEffect, useState, useContext } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { UserContext } from "../UserContext";
 import MdEditor from "react-markdown-editor-lite";
 import "react-markdown-editor-lite/lib/index.css";
 import MarkdownIt from "markdown-it";
-import { Navigate } from "react-router-dom";
+import TurndownService from "turndown";
 
 const mdParser = new MarkdownIt();
+const turndownService = new TurndownService();
 
-export default function CreatePost() {
+export default function EditPost() {
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [content, setContent] = useState("");
   const [files, setFiles] = useState("");
-  const [redirect, setRedirect] = useState(false);
+  const [currentCover, setCurrentCover] = useState("");
   const [titleError, setTitleError] = useState("");
   const [summaryError, setSummaryError] = useState("");
   const [contentError, setContentError] = useState("");
   const [fileError, setFileError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useContext(UserContext);
 
-  // 如果用户未登录，重定向到登录页面
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        const response = await axios.get(`http://localhost:4000/post/${id}`);
+        const postData = response.data;
+        setTitle(postData.title);
+        setSummary(postData.summary);
+        // 将 HTML 内容转换为 Markdown
+        const markdownContent = turndownService.turndown(postData.content);
+        setContent(markdownContent);
+        if (postData.cover) {
+          setCurrentCover(`http://localhost:4000/uploads/${postData.cover}`);
+        }
+      } catch (error) {
+        console.error("获取文章失败:", error);
+        setContentError("获取文章失败，请稍后重试");
+      }
+    };
+    fetchPost();
+  }, [id]);
 
-  async function createNewPost(e) {
+  async function updatePost(e) {
     e.preventDefault();
     setTitleError("");
     setSummaryError("");
@@ -45,13 +64,8 @@ export default function CreatePost() {
       setSummaryError("请输入文章摘要");
       hasError = true;
     }
-    // 对于 Markdown 编辑器，检查 content 是否为空或只包含空白字符
     if (!content || !content.trim()) {
       setContentError("请输入文章内容");
-      hasError = true;
-    }
-    if (!files[0]) {
-      setFileError("请选择文章封面图片");
       hasError = true;
     }
 
@@ -60,67 +74,66 @@ export default function CreatePost() {
       return;
     }
 
-    // 打印请求数据
-    console.log("Create post request data:", {
-      title: title.trim(),
-      summary: summary.trim(),
-      // content: content.trim(), // 不打印完整内容
-      hasFile: !!files[0],
-    });
-
     const data = new FormData();
     data.set("title", title.trim());
     data.set("summary", summary.trim());
-    // 将 Markdown 内容转换为 HTML 再发送
+    // 在发送数据前将 Markdown 转换回 HTML
     const htmlContent = mdParser.render(content);
     data.set("content", htmlContent);
+
     if (files[0]) {
       data.set("file", files[0]);
     }
 
     try {
-      console.log("Sending request to backend...");
-      const response = await axios.post("http://localhost:4000/post", data, {
-        withCredentials: true,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      console.log("正在更新文章，ID:", id);
+      console.log("更新数据:", {
+        title: title.trim(),
+        summary: summary.trim(),
+        // content: content.trim(), // 不打印完整内容
+        hasFile: !!files[0],
       });
 
-      console.log("Create post response:", response.data);
+      const response = await axios.put(
+        `http://localhost:4000/post/${id}`,
+        data,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
       if (response.data) {
-        setRedirect(true);
+        navigate(`/post/${id}`);
       } else {
-        setContentError("创建文章失败，请稍后重试");
+        setContentError("更新文章失败，请稍后重试");
       }
     } catch (error) {
-      console.error("Post creation failed:", error);
+      console.error("更新文章失败:", error);
       if (error.response) {
-        console.error("Error response data:", error.response.data);
-        console.error("Error response status:", error.response.status);
         setContentError(
-          error.response.data.error || "创建文章失败，请稍后重试"
+          error.response.data.error || "更新文章失败，请稍后重试"
         );
       } else if (error.request) {
-        console.error("Error request:", error.request);
-        setContentError("网络连接失败，请检查网络连接");
+        setContentError("网络连接失败，请检查网络设置");
       } else {
-        console.error("Error message:", error.message);
-        setContentError("创建文章失败，请稍后重试");
+        setContentError("更新文章失败，请稍后重试");
       }
     } finally {
       setLoading(false);
     }
   }
 
-  if (redirect) {
-    return <Navigate to="/" />;
+  if (!user) {
+    return <Navigate to="/login" />;
   }
 
   return (
     <div className="form-container">
-      <form className="form" onSubmit={createNewPost}>
-        <h2>创建新文章</h2>
+      <form className="form" onSubmit={updatePost}>
+        <h2>编辑文章</h2>
         <div className="form-group">
           <label htmlFor="title">文章标题</label>
           <input
@@ -161,6 +174,12 @@ export default function CreatePost() {
 
         <div className="form-group">
           <label htmlFor="cover">封面图片</label>
+          {currentCover && (
+            <div className="current-cover">
+              <img src={currentCover} alt="当前封面" />
+              <span>当前封面</span>
+            </div>
+          )}
           <input
             id="cover"
             type="file"
@@ -168,13 +187,10 @@ export default function CreatePost() {
               setFiles(e.target.files);
               if (e.target.files[0]) {
                 setFileError("");
-              } else {
-                setFileError("请选择文章封面图片");
               }
             }}
             accept="image/*"
             className={fileError ? "error" : ""}
-            required
           />
           {fileError && <div className="error-message">{fileError}</div>}
         </div>
@@ -186,12 +202,7 @@ export default function CreatePost() {
               value={content}
               style={{ height: 300 }}
               renderHTML={(text) => mdParser.render(text)}
-              onChange={({ text }) => {
-                setContent(text);
-                if (text && text.trim()) {
-                  setContentError("");
-                }
-              }}
+              onChange={({ text }) => setContent(text)}
               placeholder="请输入文章内容，支持 Markdown 语法"
             />
           </div>
@@ -199,7 +210,7 @@ export default function CreatePost() {
         </div>
 
         <button type="submit" disabled={loading}>
-          {loading ? "发布中..." : "发布文章"}
+          {loading ? "更新中..." : "更新文章"}
         </button>
       </form>
     </div>
