@@ -1,6 +1,4 @@
 import "./App.css";
-// import Post from "./Post";
-// import Header from "./Header";
 import axios from "axios";
 import { Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";

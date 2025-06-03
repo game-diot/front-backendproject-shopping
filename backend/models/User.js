@@ -1,7 +1,6 @@
-// models/User.js
+// 数据库模型
 const mongoose = require("mongoose");
-
-// 定义用户 Schema
+// 定义用户模式，包含用户名、邮箱和密码哈希值
 const UserSchema = new mongoose.Schema(
   {
     username: {
@@ -31,7 +30,6 @@ const UserSchema = new mongoose.Schema(
   }
 );
 
-// 创建 User 模型
+// 创建 User 模型并导出供给其他模块使用
 const User = mongoose.model("User", UserSchema);
-
 module.exports = User;

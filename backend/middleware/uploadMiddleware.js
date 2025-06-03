@@ -1,10 +1,9 @@
-// middleware/uploadMiddleware.js
+//中间件文件,用于文件上传
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-// 定义 uploads 目录，用来存储上传的文件
-// 注意：路径是相对于当前文件 (middleware 文件夹)，所以需要回到上一级目录 (项目根目录) 再进入 uploads
+// 定义上传文件的存储路径
 const uploadsDir = path.join(__dirname, "../uploads");
 
 // 判断 uploads 目录是否存在，如果不存在，则创建它
@@ -41,49 +40,13 @@ const uploadMiddleware = multer({
         false
       );
     }
-    cb(null, true); // 允许文件上传
-  },
-  // 可选：限制文件大小，例如 5MB
-  limits: {
-    fileSize: 50 * 1024 * 1024, // 50 MB (in bytes)
-  },
-});
-
-module.exports = uploadMiddleware;
-
-/*const multer = require("multer");
-const path = require("path");
-
-// 设置存储引擎
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/");
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname);
-    cb(null, Date.now() + ext);
-  },
-});
-
-// 文件过滤，限制只允许图片上传
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif/;
-  const extname = allowedTypes.test(
-    path.extname(file.originalname).toLowerCase()
-  );
-  const mimetype = allowedTypes.test(file.mimetype);
-  if (extname && mimetype) {
     cb(null, true);
-  } else {
-    cb(new Error("仅支持图片文件上传"));
-  }
-};
-
-const upload = multer({
-  storage,
-  fileFilter,
-  limits: { fileSize: 1024 * 1024 * 5 }, // 限制5MB大小
+  },
+  //限制文件大小5MB
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
 });
 
-module.exports = upload;
-*/
+// 导出 uploadMiddleware 中间件
+module.exports = uploadMiddleware;

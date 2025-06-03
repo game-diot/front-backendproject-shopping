@@ -1,47 +1,45 @@
-// controllers/postController.js
-const Post = require("../models/Post"); // 导入 Post 模型
-const User = require("../models/User"); // 可能需要在某些操作中获取用户数据
-const fs = require("fs"); // 用于删除文件
-const path = require("path"); // 用于路径操作
-
-// 定义 uploads 目录，确保与 app.js 或 uploadMiddleware.js 中一致
+//控制器文件，用于处理与文章相关的请求
+const Post = require("../models/Post");
+const User = require("../models/User");
+const fs = require("fs");
+const path = require("path");
 const uploadsDir = path.join(__dirname, "../uploads");
 
-// --- 创建文章 ---
+//定义创建文章的处理函数
 const createPost = async (req, res) => {
   try {
-    // req.user 包含了认证中间件附加的用户信息 (id, username)
+    // 从请求体中获取文章的标题、摘要和内容
     const { title, summary, content } = req.body;
 
-    // 检查所有必填字段是否提供
+    // 逻辑判断，如果标题、摘要或内容为空，返回错误
     if (!title || !summary || !content) {
-      // 如果文件已上传但其他字段缺失，需要清理已上传的文件
+      // 如果有文件上传失败，删除已上传的文件
       if (req.file) {
         fs.unlinkSync(req.file.path);
       }
+      // 返回错误信息
       return res
         .status(400)
         .json({ error: "All fields (title, summary, content) are required" });
     }
 
-    // 检查是否有封面图片文件上传
+    // 逻辑判断，如果没有上传文件，返回错误
     if (!req.file) {
       return res.status(400).json({ error: "Cover image is required" });
     }
-
-    // 创建文章
+    // 创建新的文章文档模板，标题、摘要、内容、图片URL和作者
     const postDoc = await Post.create({
       title,
       summary,
       content,
-      imageUrl: req.file.filename, // 存储 Multer 生成的文件名
-      author: req.user.id, // 从认证中间件获取作者 ID
+      imageUrl: req.file.filename,
+      author: req.user.id,
     });
-
-    res.status(201).json(postDoc); // 成功创建，返回 201 Created
+    // 响应成功
+    res.status(201).json(postDoc);
   } catch (error) {
     console.error("Error creating post:", error);
-    // 如果出错，且文件已上传，也尝试删除文件
+    // 如果有文件上传失败，删除已上传的文件
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
@@ -51,44 +49,38 @@ const createPost = async (req, res) => {
   }
 };
 
-// --- 更新文章 ---
+//定义更新文章的处理函数
 const updatePost = async (req, res) => {
   try {
-    // ✅ 修改这里：从 req.params 中获取 id
+    // 从请求体中获取文章的标题、摘要和内容
     const { id } = req.params;
-    const { title, summary, content } = req.body; // 其他字段依然从 req.body 获取
-
+    const { title, summary, content } = req.body;
     let newImageUrl = null;
+    // 打印调试信息
+    console.log(`[DEBUG - updatePost] Attempting to update post ID: ${id}`);
+    console.log(`[DEBUG - updatePost] Request Body:`, req.body);
 
-    console.log(`[DEBUG - updatePost] Attempting to update post ID: ${id}`); // 新增调试日志
-    console.log(`[DEBUG - updatePost] Request Body:`, req.body); // 打印请求体内容
-
-    // 查找文章
+    //从数据库中获取的文章文档，进行逻辑判断，如果文章不存在或用户不是作者，返回错误
     const postDoc = await Post.findById(id);
     if (!postDoc) {
-      console.log(`[DEBUG - updatePost] Post not found for ID: ${id}`); // 调试
-      // ... (其他文件清理逻辑)
+      console.log(`[DEBUG - updatePost] Post not found for ID: ${id}`);
       return res.status(404).json({ error: "Post not found" });
     }
-
-    // 检查当前用户是否是文章作者
-    // req.user 由 authenticateToken 中间件提供
+    // 逻辑判断，如果用户不是作者，返回错误
     const isAuthor =
       JSON.stringify(postDoc.author) === JSON.stringify(req.user.id);
     if (!isAuthor) {
       console.log(
         `[DEBUG - updatePost] User ${req.user.username} is not author of post ID: ${id}`
-      ); // 调试
-      // ... (其他文件清理逻辑)
+      );
       return res
         .status(403)
         .json({ error: "You are not authorized to update this post" });
     }
-
-    // ... (处理文件上传和更新 imageUrl 的逻辑不变)
+    // 逻辑判断，如果有新的文件上传，更新文章的图片URL
     if (req.file) {
       newImageUrl = req.file.filename;
-      // 删除旧的封面图片
+      // 删除旧的图片文件
       if (
         postDoc.imageUrl &&
         fs.existsSync(path.join(uploadsDir, postDoc.imageUrl))
@@ -96,11 +88,10 @@ const updatePost = async (req, res) => {
         fs.unlinkSync(path.join(uploadsDir, postDoc.imageUrl));
       }
     } else {
-      // 如果没有新文件上传，保留旧的 imageUrl
+      // 如果没有新的文件上传，保持旧的图片URL
       newImageUrl = postDoc.imageUrl;
     }
-
-    // 更新文章信息
+    // 更新文章文档结构
     await Post.findByIdAndUpdate(
       id,
       {
@@ -111,36 +102,33 @@ const updatePost = async (req, res) => {
       },
       { new: true }
     );
-
+    // 响应成功
     console.log(`[DEBUG - updatePost] Post ID ${id} updated successfully.`); // 调试
     res.json({ message: "Post updated successfully" });
   } catch (error) {
     console.error("Error updating post:", error);
-    // ... (其他错误处理逻辑)
     res
       .status(500)
       .json({ error: "Error updating post", details: error.message });
   }
 };
-// --- 获取所有文章列表 ---
+// 定义获取所有文章的处理函数
 const getAllPosts = async (req, res) => {
   try {
-    // 查找所有文章，并填充作者信息（只包含 username 字段），按创建时间倒序排列，限制返回 20 条
+    // 从数据库中获取所有文章，并按照创建时间降序排列，限制返回数量为20
     const posts = await Post.find()
       .populate("author", ["username"])
       .sort({ createdAt: -1 })
       .limit(20);
-
-    // 为每篇文章添加完整的图片 URL
+    // 将图片URL拼接成完整的URL
     const postsWithImageUrls = posts.map((post) => {
-      const postObject = post.toObject(); // 将 Mongoose 文档转换为普通 JS 对象
+      const postObject = post.toObject();
       if (postObject.imageUrl) {
-        // 构建完整的图片 URL，与你的 app.js 中的静态文件服务路径匹配
         postObject.imageUrl = `http://localhost:4000/uploads/${postObject.imageUrl}`;
       }
       return postObject;
     });
-
+    // 响应文章列表URL
     res.json(postsWithImageUrls);
   } catch (error) {
     console.error("Error fetching posts:", error);
@@ -150,30 +138,32 @@ const getAllPosts = async (req, res) => {
   }
 };
 
+// 定义获取单个文章的处理函数
 const getPostById = async (req, res) => {
   try {
+    // 从请求参数中获取文章ID
     const { id } = req.params;
     console.log(`[DEBUG - getPostById] Request for post ID: ${id}`);
-
+    // 从数据库中获取文章，并按照创建时间降序排列
     const post = await Post.findById(id).populate("author", ["username"]);
-    // 🚨 关键打印：原始 post 对象，看是否有 imageUrl
+
     console.log(
       `[DEBUG - getPostById] Raw post from DB:`,
       post ? post.toObject() : "Post not found"
     );
-
+    // 如果文章不存在，返回错误
     if (!post) {
       console.log(`[DEBUG - getPostById] Post not found for ID: ${id}`);
       return res.status(404).json({ error: "Post not found" });
     }
-
+    // 将图片URL拼接成完整的URL
     const postObject = post.toObject();
-    // 🚨 关键打印：toObject() 后的 postObject，再次确认 imageUrl
+
     console.log(
       `[DEBUG - getPostById] Post object after toObject():`,
       postObject
     );
-
+    // 如果文章存在，将图片URL拼接成完整的URL
     if (postObject.imageUrl) {
       console.log(
         `[DEBUG - getPostById] Original imageUrl before拼接:`,
@@ -185,7 +175,6 @@ const getPostById = async (req, res) => {
         postObject.imageUrl
       );
     } else {
-      // 🚨 关键打印：如果 imageUrl 缺失或为空
       console.log(
         `[DEBUG - getPostById] imageUrl is missing or empty in postObject for ID: ${id}`
       );
@@ -199,50 +188,43 @@ const getPostById = async (req, res) => {
       .json({ error: "Error fetching post", details: error.message });
   }
 };
-// --- 删除文章 ---
+// 定义删除文章的处理函数
 const deletePost = async (req, res) => {
   try {
-    const { id } = req.params; // 从 URL 参数中获取文章 ID
-
-    // 查找文章
+    // 从请求参数中获取文章ID
+    const { id } = req.params;
+    // 从数据库中获取文章
     const postDoc = await Post.findById(id);
-
+    // 逻辑判断，如果文章不存在，返回错误
     if (!postDoc) {
       console.log(`[DEBUG - deletePost] 文章未找到，ID: ${id}`);
       return res.status(404).json({ error: "文章未找到" });
     }
-
-    // 验证用户权限：确保当前登录用户是文章的作者
-    // req.user 是由 authenticateToken 中间件设置的
+    // 逻辑判断，如果用户未认证或用户不是文章的作者，返回错误
     if (!req.user || !req.user.id) {
       console.log(`[DEBUG - deletePost] 用户未认证.`);
       return res.status(401).json({ error: "用户未认证，请登录" });
     }
-
-    const isAuthor = String(postDoc.author) === String(req.user.id); // 确保比较的是字符串或 ObjectId 类型一致
-
+    // 逻辑判断，如果用户不是文章的作者，返回错误
+    const isAuthor = String(postDoc.author) === String(req.user.id);
     if (!isAuthor) {
       console.log(
         `[DEBUG - deletePost] 用户 ${req.user.username} (ID: ${req.user.id}) 无权删除文章 ID: ${id}`
       );
       return res.status(403).json({ error: "无权删除此文章" });
     }
-
-    // 如果文章有封面图片，删除对应的物理文件
+    // 删除文章图片文件
     if (postDoc.imageUrl) {
       const imagePath = path.join(uploadsDir, postDoc.imageUrl);
       if (fs.existsSync(imagePath)) {
-        // 检查文件是否存在
-        fs.unlinkSync(imagePath); // 同步删除文件
+        fs.unlinkSync(imagePath);
         console.log(`[DEBUG - deletePost] 已删除图片文件: ${imagePath}`);
       } else {
         console.log(`[DEBUG - deletePost] 图片文件未找到: ${imagePath}`);
       }
     }
-
     // 从数据库中删除文章
     await Post.findByIdAndDelete(id);
-
     console.log(`[DEBUG - deletePost] 文章 ID: ${id} 删除成功.`);
     res.json({ message: "文章删除成功" });
   } catch (error) {
@@ -250,6 +232,8 @@ const deletePost = async (req, res) => {
     res.status(500).json({ error: "删除文章失败", details: error.message });
   }
 };
+
+// 导出创建,更新,删除,获取文章的处理函数
 module.exports = {
   createPost,
   updatePost,

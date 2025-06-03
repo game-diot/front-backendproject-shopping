@@ -1,21 +1,23 @@
-// models/Post.js
+// 数据库模型
+// 导入mongoose库并解构 Schema
 const mongoose = require("mongoose");
-const { Schema } = mongoose; // 解构 Schema
+const { Schema } = mongoose;
 
-// 定义文章 Schema
+// 定义 Post 模型的结构，title、summary、content、imageUrl、author 字段
 const PostSchema = new Schema(
   {
+    // title字段
     title: {
       type: String,
       required: [true, "Title is required"], // 标题是必填项
       trim: true, // 自动去除标题前后的空白字符
-      minlength: [1, "Title must be at least 1 characters long"], // 标题最小长度为5
+      minlength: [1, "Title must be at least 1 characters long"], // 标题最小长度为1
     },
     summary: {
       type: String,
       required: [true, "Summary is required"], // 摘要是必填项
       trim: true, // 自动去除摘要前后的空白字符
-      minlength: [1, "Summary must be at least 1 characters long"], // 摘要最小长度为10
+      minlength: [1, "Summary must be at least 1 characters long"], // 摘要最小长度为1
     },
     content: {
       type: String,
@@ -37,7 +39,6 @@ const PostSchema = new Schema(
   }
 );
 
-// 创建 Post 模型
+// 创建 Post 模型并导出，供给其他模块使用
 const Post = mongoose.model("Post", PostSchema);
-
 module.exports = Post;
