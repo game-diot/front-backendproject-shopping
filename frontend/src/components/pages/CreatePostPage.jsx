@@ -1,3 +1,5 @@
+// CreatePost页面,用于创建新文章
+// 引入所需的库和组件
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../UserContext";
@@ -6,10 +8,11 @@ import MdEditor from "react-markdown-editor-lite";
 import "react-markdown-editor-lite/lib/index.css";
 import MarkdownIt from "markdown-it";
 import { Navigate } from "react-router-dom";
-
+// 定义 Markdown 解析器
 const mdParser = new MarkdownIt();
-
+// 定义 CreatePost 组件
 export default function CreatePost() {
+  // 声明状态变量和状态更新函数,标题,摘要,内容,文件,跳转状态,标题错误信息,摘要错误信息,内容错误信息,文件错误信息,加载状态
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [content, setContent] = useState("");
@@ -26,7 +29,7 @@ export default function CreatePost() {
   if (!user) {
     return <Navigate to="/login" />;
   }
-
+  // 创建新文章的异步函数
   async function createNewPost(e) {
     e.preventDefault();
     setTitleError("");
@@ -54,7 +57,6 @@ export default function CreatePost() {
       setFileError("请选择文章封面图片");
       hasError = true;
     }
-
     if (hasError) {
       setLoading(false);
       return;
@@ -64,10 +66,9 @@ export default function CreatePost() {
     console.log("Create post request data:", {
       title: title.trim(),
       summary: summary.trim(),
-      // content: content.trim(), // 不打印完整内容
       hasFile: !!files[0],
     });
-
+    // 定义表单数据,包括标题,摘要,内容,文件
     const data = new FormData();
     data.set("title", title.trim());
     data.set("summary", summary.trim());
@@ -77,7 +78,7 @@ export default function CreatePost() {
     if (files[0]) {
       data.set("file", files[0]);
     }
-
+    // 发送 POST 请求到后端
     try {
       console.log("Sending request to backend...");
       const response = await axios.post("http://localhost:4000/post", data, {
@@ -86,7 +87,7 @@ export default function CreatePost() {
           "Content-Type": "multipart/form-data",
         },
       });
-
+      // 打印响应数据
       console.log("Create post response:", response.data);
       if (response.data) {
         setRedirect(true);
@@ -112,11 +113,11 @@ export default function CreatePost() {
       setLoading(false);
     }
   }
-
+  // 创建完成后跳转到首页
   if (redirect) {
     return <Navigate to="/" />;
   }
-
+  // 渲染 CreatePost 组件
   return (
     <div className="form-container">
       <form className="form" onSubmit={createNewPost}>

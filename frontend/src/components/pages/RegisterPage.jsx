@@ -1,16 +1,20 @@
+// 注册页面,用于注册新用户
 import { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { UserContext } from "../UserContext";
 import axios from "axios";
 import { Navigate } from "react-router-dom";
 
+// 注册页面
 export default function RegisterPage() {
+  // 状态变量和状态更新函数,密码,用户名,邮箱,跳转状态,错误信息
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [redirect, setRedirect] = useState(false);
   const [error, setError] = useState("");
 
+  // 定义注册函数
   async function register(e) {
     e.preventDefault();
     setError("");
@@ -25,10 +29,11 @@ export default function RegisterPage() {
     console.log("Register request data:", {
       username,
       email,
-      password: "***", // 不打印实际密码
+      password: "***",
     });
 
     try {
+      // 发送注册请求
       const response = await axios.post(
         "http://localhost:4000/register",
         {
@@ -37,6 +42,7 @@ export default function RegisterPage() {
           password,
         },
         {
+          // 发送请求时携带凭据
           withCredentials: true,
         }
       );
@@ -62,11 +68,11 @@ export default function RegisterPage() {
       }
     }
   }
-
+  // 注册成功后跳转到登录页面
   if (redirect) {
     return <Navigate to="/login" />;
   }
-
+  // 渲染注册页面
   return (
     <div className="form-container">
       <form className="form login-form" onSubmit={register}>

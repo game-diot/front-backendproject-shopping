@@ -1,16 +1,21 @@
+// EditPost页面，用于编辑文章
+// 引入所需的库和组件
 import { useEffect, useState, useContext } from "react";
+// Param用于获取路由参数,Navigate用于页面跳转
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { UserContext } from "../UserContext";
 import MdEditor from "react-markdown-editor-lite";
 import "react-markdown-editor-lite/lib/index.css";
 import MarkdownIt from "markdown-it";
+// TurndownService用于将 HTML 转换为 Markdown
 import TurndownService from "turndown";
-
+// 定义 Markdown 解析器
 const mdParser = new MarkdownIt();
 const turndownService = new TurndownService();
-
+// 定义 EditPost 组件
 export default function EditPost() {
+  // 声明状态变量和状态更新函数,标题,摘要,内容,文件,当前封面,标题错误信息,摘要错误信息,内容错误信息,文件错误信息,加载状态
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [content, setContent] = useState("");
@@ -24,10 +29,12 @@ export default function EditPost() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
-
+  // 使用useEffect钩子在组件挂载后获取文章数据，id作为参数
   useEffect(() => {
+    // 定义异步函数fetchPost,用于获取文章数据
     const fetchPost = async () => {
       try {
+        // 发送 GET 请求获取文章数据
         const response = await axios.get(`http://localhost:4000/post/${id}`);
         const postData = response.data;
         setTitle(postData.title);
@@ -46,6 +53,7 @@ export default function EditPost() {
     fetchPost();
   }, [id]);
 
+  // 更新文章
   async function updatePost(e) {
     e.preventDefault();
     setTitleError("");
@@ -73,27 +81,25 @@ export default function EditPost() {
       setLoading(false);
       return;
     }
-
+    // 定义表单数据标题,摘要,内容,文件
     const data = new FormData();
     data.set("title", title.trim());
     data.set("summary", summary.trim());
     // 在发送数据前将 Markdown 转换回 HTML
     const htmlContent = mdParser.render(content);
     data.set("content", htmlContent);
-
+    // 如果有文件,将文件添加到表单数据
     if (files[0]) {
       data.set("file", files[0]);
     }
-
+    // 发送 PUT 请求更新文章
     try {
       console.log("正在更新文章，ID:", id);
       console.log("更新数据:", {
         title: title.trim(),
         summary: summary.trim(),
-        // content: content.trim(), // 不打印完整内容
         hasFile: !!files[0],
       });
-
       const response = await axios.put(
         `http://localhost:4000/post/${id}`,
         data,
@@ -104,7 +110,7 @@ export default function EditPost() {
           },
         }
       );
-
+      // 如果更新成功,跳转至文章详情页
       if (response.data) {
         navigate(`/post/${id}`);
       } else {
@@ -125,11 +131,12 @@ export default function EditPost() {
       setLoading(false);
     }
   }
-
+  // 如果未登录,跳转至登录页
   if (!user) {
     return <Navigate to="/login" />;
   }
 
+  // 渲染编辑文章表单jsx
   return (
     <div className="form-container">
       <form className="form" onSubmit={updatePost}>

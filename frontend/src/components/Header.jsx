@@ -1,3 +1,5 @@
+// Header组件,用于显示头部信息
+// 引入所需的库和组件
 import { Link, useNavigate } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { UserContext } from "./UserContext";

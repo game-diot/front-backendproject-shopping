@@ -1,3 +1,5 @@
+// App主要组件，包含路由和UserContextProvider
+// 引入所需的库和组件
 import "./App.css";
 import axios from "axios";
 import { Route, Routes } from "react-router-dom";
@@ -9,9 +11,10 @@ import { UserContextProvider } from "./components/UserContext";
 import CreatePost from "./components/pages/CreatePostPage";
 import PostPage from "./components/pages/PostPage";
 import EditPost from "./components/pages/EditPostPage";
+// 设置axios的默认请求地址和跨域请求
 axios.defaults.baseURL = "http://localhost:4000";
 axios.defaults.withCredentials = true;
-
+// App组件的JSX
 function App() {
   return (
     <UserContextProvider>

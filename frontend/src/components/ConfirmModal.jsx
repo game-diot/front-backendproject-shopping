@@ -1,5 +1,6 @@
+// ConfirmModal组件,用于确认操作弹出确认框
 import React from "react";
-import "./ConfirmModal.css"; // 我们将为这个模态框添加一些基本的 CSS
+import "./ConfirmModal.css";
 
 export default function ConfirmModal({ message, onConfirm, onCancel }) {
   return (

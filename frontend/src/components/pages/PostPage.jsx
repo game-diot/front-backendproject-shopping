@@ -1,20 +1,23 @@
-// frontend/src/pages/PostPage.jsx
-
+// Post页面，用于显示文章详情
+// 引入所需的库和组件
 import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import { UserContext } from "../UserContext"; // 确保这个路径是正确的，如果 UserContext 在 components 目录下，这里应该是 "../components/UserContext"
+import { UserContext } from "../UserContext";
+//format用于格式化日期，zhCN用于格式化日期为中文
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
-import ConfirmModal from "../ConfirmModal"; // 确保这个路径是正确的，如果 ConfirmModal 在 components 目录下，这里应该是 "../components/ConfirmModal"
-
+import ConfirmModal from "../ConfirmModal";
+// Post页面组件
 export default function PostPage() {
+  // 声明状态变量和状态更新函数,文章,是否显示删除模态框,文章ID,跳转函数,用户信息
   const [post, setPost] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false); // ✅ 新增状态来控制模态框显示
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(UserContext);
 
+  // 当组件挂载时,发送HTTP请求获取文章详情，id作为参数
   useEffect(() => {
     const fetchPost = async () => {
       try {
@@ -29,12 +32,12 @@ export default function PostPage() {
     fetchPost();
   }, [id]);
 
-  // ✅ 新增：当用户点击删除按钮时，显示模态框
+  // 显示删除模态框按钮函数
   const handleDeleteButtonClick = () => {
     setShowDeleteModal(true);
   };
 
-  // ✅ 新增：当用户点击模态框的“确定”按钮时执行实际删除逻辑
+  // 点击删除按钮时,发送HTTP请求删除文章,id作为参数
   const handleConfirmDelete = async () => {
     setShowDeleteModal(false); // 关闭模态框
     try {
@@ -50,19 +53,19 @@ export default function PostPage() {
     }
   };
 
-  // ✅ 新增：当用户点击模态框的“取消”按钮时执行
+  //点击模态框的取消按钮时执行函数
   const handleCancelDelete = () => {
     setShowDeleteModal(false); // 关闭模态框
   };
-
+  // 如果文章不存在,返回null
   if (!post) return null;
-
+  // 获取图片URL函数
   const getImageUrl = (path) => {
     if (!path) return null;
     if (path.startsWith("http")) return path;
     return `http://localhost:4000/uploads/${path}`;
   };
-
+  // 返回Post文章详情的JSX
   return (
     <div className="post-page">
       <div className="post-header">
